@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ภารกิจพิชิตขยะ | เกมแยกขยะ</title>
+<style>
+:root{--green:#18794e;--mint:#e7f8ee;--ink:#18352a;--gold:#ffcf56}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(145deg,#e9fff0,#f6fbff);color:var(--ink);min-height:100vh}
+.wrap{max-width:900px;margin:auto;padding:18px}
+header{text-align:center;padding:14px 0 8px}
+h1{font-size:clamp(1.8rem,5vw,3rem);margin:5px 0;color:var(--green)}
+.sub{margin:0;color:#47665a}
+.panel{background:#fff;border-radius:22px;padding:20px;box-shadow:0 8px 25px #164e3b12;margin:14px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--mint);border-radius:14px;text-align:center;padding:12px}
+.stat strong{display:block;font-size:1.5rem;color:var(--green)}
+.progress{height:9px;background:#e7eee9;border-radius:99px;overflow:hidden;margin-top:14px}
+#bar{height:100%;width:0;background:#35aa70;transition:width .2s}
+.item{text-align:center;padding:18px 10px}
+.emoji{font-size:clamp(4rem,15vw,7rem);line-height:1.2}
+#trashName{font-size:1.45rem;font-weight:800;margin:10px 0 4px}
+#hint{color:#5c7167;min-height:1.5em}
+.bins{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.bin{border:2px solid transparent;border-radius:16px;padding:12px 5px;cursor:pointer;background:#f6f8f7;min-height:125px;font:inherit;transition:transform .12s,border-color .12s}
+.bin:hover{transform:translateY(-3px);border-color:#91c9a8}
+.bin .can{font-size:2.5rem;display:block}
+.bin b{display:block;font-size:.95rem}
+.bin small{display:block;color:#5d7066;margin-top:4px}
+.feedback{font-weight:700;text-align:center;min-height:28px;margin:12px 0 0}
+button:focus-visible{outline:3px solid #145d3c;outline-offset:3px}
+.primary{background:var(--green);color:white;border:0;border-radius:13px;padding:13px 22px;font:inherit;font-weight:800;cursor:pointer}
+.primary:hover{background:#105f3b}
+.center{text-align:center}
+.hidden{display:none!important}
+.rules{font-size:.95rem;line-height:1.65}
+footer{text-align:center;color:#688074;font-size:.85rem;padding:12px}
+@media(max-width:580px){.wrap{padding:12px}.panel{padding:14px}.bins{grid-template-columns:repeat(2,1fr)}.bin{min-height:112px}.stat strong{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div style="font-size:2rem">🌎 ♻️ 🌱</div>
+  <h1>ภารกิจพิชิตขยะ</h1>
+  <p class="sub">รู้จักขยะให้ถูกถัง โลกของเราก็น่าอยู่ขึ้น!</p>
+</header>
+
+<section class="panel rules" id="intro">
+  <h2>🎮 วิธีเล่น</h2>
+  <p>อ่านชื่อและดูรูปขยะ จากนั้นเลือกถังที่ถูกต้องให้ได้มากที่สุด คุณมีเวลา <b>60 วินาที</b></p>
+  <ul>
+    <li>ตอบถูก รับ <b>10 คะแนน</b></li>
+    <li>ตอบผิด ไม่ได้คะแนน แต่จะมีคำแนะนำให้เรียนรู้</li>
+    <li>เล่นให้ครบเวลาเพื่อดูคะแนนและผลการเล่น</li>
+  </ul>
+  <p><b>หมายเหตุ:</b> แนวทางแยกขยะอาจต่างกันในแต่ละพื้นที่ ให้ยึดตามป้ายของหน่วยงานท้องถิ่นเป็นหลัก</p>
+  <div class="center"><button class="primary" id="start">เริ่มเกมเลย 🚀</button></div>
+</section>
+
+<section class="panel hidden" id="game">
+  <div class="stats">
+    <div class="stat">คะแนน<strong id="score">0</strong></div>
+    <div class="stat">ข้อที่<strong id="round">1</strong><span style="font-size:.8rem"> / 15</span></div>
+    <div class="stat">เวลา<strong><span id="time">60</span> วิ</strong></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="item">
+    <div class="emoji" id="emoji">🍌</div>
+    <div id="trashName">เปลือกกล้วย</div>
+    <div id="hint">ควรทิ้งลงถังไหน?</div>
+  </div>
+  <h3 class="center">เลือกถังขยะให้ถูกต้อง</h3>
+  <div class="bins">
+    <button class="bin" data-bin="general"><span class="can">🗑️</span><b>ขยะทั่วไป</b><small>สีฟ้า/เทา*</small></button>
+    <button class="bin" data-bin="recycle"><span class="can">♻️</span><b>ขยะรีไซเคิล</b><small>สีเหลือง*</small></button>
+    <button class="bin" data-bin="organic"><span class="can">🍃</span><b>ขยะเปียก</b><small>สีเขียว*</small></button>
+    <button class="bin" data-bin="hazard"><span class="can">☣️</span><b>ขยะอันตราย</b><small>สีแดง*</small></button>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+</section>
+
+<section class="panel hidden center" id="result">
+  <div style="font-size:4rem" id="resultEmoji">🏆</div>
+  <h2 id="resultTitle">เก่งมาก!</h2>
+  <p>คุณทำคะแนนได้</p>
+  <div style="font-size:3rem;font-weight:900;color:var(--green)"><span id="finalScore">0</span> คะแนน</div>
+  <p id="resultText"></p>
+  <button class="primary" id="again">เล่นอีกครั้ง 🔄</button>
+</section>
+<footer>*สีถังเป็นตัวอย่าง อาจแตกต่างกันตามพื้นที่และหน่วยงาน</footer>
+</div>
+<script>
+const trash=[
+ {e:"🍌",n:"เปลือกกล้วย",b:"organic",why:"เศษอาหารและเปลือกผลไม้เป็นขยะเปียก/อินทรีย์"},
+ {e:"🧴",n:"ขวดพลาสติกที่เทของเหลวออกแล้ว",b:"recycle",why:"ขวดพลาสติกสะอาดสามารถนำไปรีไซเคิลได้"},
+ {e:"🥫",n:"กระป๋องเครื่องดื่ม",b:"recycle",why:"กระป๋องโลหะนำไปรีไซเคิลได้ ควรเทให้หมดก่อน"},
+ {e:"🔋",n:"ถ่านไฟฉายใช้แล้ว",b:"hazard",why:"ถ่านไฟฉายมีสารที่อาจเป็นอันตราย ควรแยกส่งจุดรับเฉพาะ"},
+ {e:"🧻",n:"กระดาษทิชชูใช้แล้ว",b:"general",why:"ทิชชูใช้แล้วโดยทั่วไปรีไซเคิลไม่ได้"},
+ {e:"🍚",n:"ข้าวเหลือ",b:"organic",why:"เศษอาหารเป็นขยะอินทรีย์ อาจนำไปทำปุ๋ยได้"},
+ {e:"📰",n:"หนังสือพิมพ์แห้ง",b:"recycle",why:"กระดาษแห้งและสะอาดสามารถรวบรวมรีไซเคิลได้"},
+ {e:"💡",n:"หลอดไฟใช้แล้ว",b:"hazard",why:"หลอดไฟบางชนิดอาจมีสารอันตราย ควรส่งจุดรับที่เหมาะสม"},
+ {e:"🍬",n:"ซองขนมเปื้อนอาหาร",b:"general",why:"ซองขนมหลายชนิดเป็นวัสดุผสมและมักรีไซเคิลยาก"},
+ {e:"🥬",n:"เศษผัก",b:"organic",why:"เศษผักย่อยสลายได้ เหมาะกับการทำปุ๋ยหมัก"},
+ {e:"🍾",n:"ขวดแก้วเปล่า",b:"recycle",why:"ขวดแก้วนำกลับไปรีไซเคิลได้ ควรระวังแตกและแยกตามระบบพื้นที่"},
+ {e:"🪫",n:"แบตเตอรี่ก้อนเล็ก",b:"hazard",why:"แบตเตอรี่ควรแยกส่งจุดรับขยะอันตราย ไม่ทิ้งปะปน"},
+ {e:"🥡",n:"กล่องโฟมเปื้อนอาหาร",b:"general",why:"โฟมเปื้อนอาหารมักรีไซเคิลได้ยาก ให้ตรวจระบบรับขยะในพื้นที่"},
+ {e:"🍗",n:"กระดูกไก่และเศษอาหาร",b:"organic",why:"เศษอาหารและกระดูกจัดเป็นขยะอินทรีย์ในระบบที่รองรับ"},
+ {e:"📦",n:"กล่องกระดาษแห้งสะอาด",b:"recycle",why:"กล่องกระดาษสะอาดนำไปรีไซเคิลได้ ควรพับให้แบน"}
+];
+const names={general:"ขยะทั่วไป",recycle:"ขยะรีไซเคิล",organic:"ขยะเปียก",hazard:"ขยะอันตราย"};
+let deck=[],idx=0,score=0,time=60,timer=null,locked=false,answered=0;
+const $=id=>document.getElementById(id);
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function startGame(){
+ clearInterval(timer);deck=shuffle(trash);idx=0;score=0;time=60;answered=0;locked=false;
+ $("intro").classList.add("hidden");$("result").classList.add("hidden");$("game").classList.remove("hidden");
+ $("score").textContent=score;$("time").textContent=time;$("feedback").textContent="";
+ showTrash();updateBar();
+ timer=setInterval(()=>{time--;$("time").textContent=time;updateBar();if(time<=0)endGame();},1000);
+}
+function showTrash(){
+ if(idx>=deck.length){deck=shuffle(trash);idx=0;}
+ const t=deck[idx];$("emoji").textContent=t.e;$("trashName").textContent=t.n;$("hint").textContent="ควรทิ้งลงถังไหน?";
+ $("round").textContent=Math.min(answered+1,15);$("feedback").textContent="";locked=false;
+ document.querySelectorAll(".bin").forEach(b=>b.disabled=false);
+}
+function updateBar(){$("bar").style.width=(time/60*100)+"%";}
+function choose(bin){
+ if(locked||time<=0)return;locked=true;document.querySelectorAll(".bin").forEach(b=>b.disabled=true);
+ const t=deck[idx];const fb=$("feedback");
+ if(bin===t.b){score+=10;$("score").textContent=score;fb.textContent="✅ ถูกต้อง! "+t.why;fb.style.color="#18794e";}
+ else{fb.textContent="💡 ยังไม่ถูก — คำตอบคือ "+names[t.b]+". "+t.why;fb.style.color="#a34c18";}
+ answered++;
+ if(answered>=15){setTimeout(endGame,1000);return;}
+ idx++;setTimeout(()=>{if(time>0)showTrash();},1100);
+}
+function endGame(){
+ if($("game").classList.contains("hidden"))return;
+ clearInterval(timer);$("game").classList.add("hidden");$("result").classList.remove("hidden");
+ $("finalScore").textContent=score;
+ const pct=score/150;
+ $("resultEmoji").textContent=pct>=.8?"🏆":pct>=.5?"🌱":"♻️";
+ $("resultTitle").textContent=pct>=.8?"ยอดเยี่ยม! นักแยกขยะมือโปร":pct>=.5?"ทำได้ดี! ฝึกอีกนิดนะ":"เริ่มต้นได้ดี มาเรียนรู้กันต่อ!";
+ $("resultText").textContent=`ตอบถูก ${score/10} จาก ${answered} ข้อ ลองเล่นอีกครั้งเพื่อฝึกแยกขยะให้แม่นยำขึ้น`;
+}
+document.querySelectorAll(".bin").forEach(b=>b.addEventListener("click",()=>choose(b.dataset.bin)));
+$("start").addEventListener("click",startGame);$("again").addEventListener("click",startGame);
+</script>
+</body>
+</html>
